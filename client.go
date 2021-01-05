@@ -153,7 +153,7 @@ func (v *VivoPush) SendList(msg *MessagePayload, regIds []string) (*SendResult, 
 	if res.Result != 0 {
 		return nil, errors.New(res.Desc)
 	}
-	bytes, err := json.Marshal(NewListMessage(regIds, res.TaskId))
+	bytes, err := json.Marshal(NewListMessage(regIds, res.RequestId))
 	if err != nil {
 		return nil, err
 	}

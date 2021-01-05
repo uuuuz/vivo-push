@@ -1,13 +1,19 @@
 package vivopush
 
+type User struct {
+	Status int `json:"status"`
+	UserId string `json:"userid"`
+}
+
 type ResultItem struct {
 	Result int    `json:"result"`
 	Desc   string `json:"desc"`
+	InvalidUsers []User `json:"invalidUsers"`
 }
 
 type SendResult struct {
 	ResultItem
-	TaskId string `json:"taskId"`
+	RequestId string `json:"requestId"`
 }
 
 type BatchStatusResult struct {
