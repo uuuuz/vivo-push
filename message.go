@@ -17,6 +17,7 @@ type Message struct {
 	SkipType        int               `json:"skipType"`        // 点击跳转类型 1：打开 APP 首页 2：打开链接 3：自定义 4:打开 app 内指定页面
 	SkipContent     string            `json:"skipContent"`     // 可选项。跳转内容跳转类型为 2 时，跳转内容最大1000 个字符，跳转类型为 3 或 4 时，跳转内容最大 1024 个字符
 	NetworkType     int               `json:"networkType"`     // 可选项。网络方式 -1：不限，1：wifi 下发送，不填默认为-1
+	Classification  int               `json:"classification"`  // 消息类型 0：运营类消息，1：系统类消息。不填默认为0
 	ClientCustomMap map[string]string `json:"clientCustomMap"` // 可选项。客户端自定义键值对自定义key和Value键值对个数不能超过 10 个，且长度不能超过1024 字符, key 和 Value 键值对总长度不能超过 1024 字符。
 	Extra           map[string]string `json:"extra"`           // 可选项。高级特性
 	RequestId       string            `json:"requestId"`       // 用户请求唯一标识
