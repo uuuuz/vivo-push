@@ -77,7 +77,7 @@ func (m *MessagePayload) JSON() []byte {
 
 //-----------------------------------------------------------------------------------//
 // 发送给设备的Message对象
-func NewVivoMessage(title, content string) *Message {
+func NewVivoMessage(title, content string, classification int) *Message {
 	return &Message{
 		NotifyType:      2,
 		Title:           title,
@@ -86,6 +86,7 @@ func NewVivoMessage(title, content string) *Message {
 		SkipType:        1,
 		SkipContent:     "",
 		NetworkType:     -1,
+		Classification:  classification,
 		ClientCustomMap: make(map[string]string),
 		Extra:           make(map[string]string),
 		RequestId:       strings.ToUpper(gouuid.Must(gouuid.NewV4()).String()),
