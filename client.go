@@ -37,7 +37,7 @@ type AuthToken struct {
 
 type VivoPush struct {
 	host       string
-	Auth_token string
+	vc         *VivoClient
 }
 
 func NewClient(appId, appKey, appSecret string) (*VivoPush, error) {
@@ -46,13 +46,9 @@ func NewClient(appId, appKey, appSecret string) (*VivoPush, error) {
 		appKey,
 		appSecret,
 	}
-	token, err := vc.GetToken()
-	if err != nil {
-		return nil, err
-	}
 	return &VivoPush{
 		host:       ProductionHost,
-		Auth_token: token,
+		vc: 		vc,
 	}, nil
 }
 
@@ -65,6 +61,19 @@ func (vc *VivoClient) GetToken() (string, error) {
 			return authToken.token, nil
 		}
 	}
+	// 从缓存中获取
+	if tokenCache != nil{
+		ti, err := tokenCache.Get()
+		if err != nil{
+			return "", nil
+		}
+		if ti != nil{
+			authToken.token = ti.Token
+			authToken.valid_time = ti.TokenValidTime
+			return ti.Token, nil
+		}
+	}
+
 	md5Ctx := md5.New()
 	md5Ctx.Write([]byte(vc.AppId + vc.AppKey + strconv.FormatInt(now, 10) + vc.AppSecret))
 	sign := hex.EncodeToString(md5Ctx.Sum(nil))
@@ -79,6 +88,9 @@ func (vc *VivoClient) GetToken() (string, error) {
 		return "", err
 	}
 	req, err := http.NewRequest("POST", ProductionHost+AuthURL, bytes.NewReader(formData))
+	if err != nil{
+		return "", err
+	}
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -100,6 +112,18 @@ func (vc *VivoClient) GetToken() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	// 设置token 缓存
+	if tokenCache != nil{
+		if err := tokenCache.Set(&TokenInfo{
+			Token: token,
+			TokenValidTime: now + 3600000,
+			KeyExpire: 3600000,
+		}); err != nil{
+			return "", err
+		}
+	}
+
 	authToken.token = token
 	authToken.valid_time = now + 3600000 //1小时有效
 	return token, nil
@@ -230,6 +254,10 @@ func handleResponse(response *http.Response) ([]byte, error) {
 }
 
 func (v *VivoPush) doPost(url string, formData []byte) ([]byte, error) {
+	token, e := v.vc.GetToken()
+	if e != nil {
+		return nil, e
+	}
 	var result []byte
 	var req *http.Request
 	var resp *http.Response
@@ -237,7 +265,7 @@ func (v *VivoPush) doPost(url string, formData []byte) ([]byte, error) {
 
 	req, err = http.NewRequest("POST", url, bytes.NewReader(formData))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("authToken", v.Auth_token)
+	req.Header.Set("authToken", token)
 	client := &http.Client{}
 	tryTime := 0
 tryAgain:
@@ -260,13 +288,17 @@ tryAgain:
 }
 
 func (v *VivoPush) doGet(url string, params string) ([]byte, error) {
+	token, e := v.vc.GetToken()
+	if e != nil {
+		return nil, e
+	}
 	var result []byte
 	var req *http.Request
 	var resp *http.Response
 	var err error
 	req, err = http.NewRequest("GET", url+params, nil)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("authToken", v.Auth_token)
+	req.Header.Set("authToken", token)
 
 	client := &http.Client{}
 	resp, err = client.Do(req)
