@@ -14,7 +14,7 @@ func InitTokenCache(t TokenCache) {
 }
 
 type TokenInfo struct {
-	Token string
-	TokenValidTime int64
-	KeyExpire int64
+	Token string `json:"token"`
+	TokenValidTime int64 `json:"token_valid_time"`
+	KeyExpire int64 `json:"key_expire"`
 }
