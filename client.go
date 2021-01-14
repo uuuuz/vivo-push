@@ -63,24 +63,36 @@ func (vc *VivoClient) GetToken() (string, error) {
 	}
 	// 从缓存中获取
 	if tokenCache != nil{
-		ti, err := tokenCache.Get()
+		ti, err := tokenCache.TokenCache(vc.AppId, vc.AppKey, vc.AppSecret)
 		if err != nil{
-			return "", nil
+			return "", err
 		}
 		if ti != nil{
 			authToken.token = ti.Token
 			authToken.valid_time = ti.TokenValidTime
-			return ti.Token, nil
+		}
+	} else {
+		token, err := GetTokenByRequest(vc.AppId, vc.AppKey, vc.AppSecret)
+		if err != nil{
+			return "", err
+		}
+		if token != ""{
+			authToken.token = token
+			authToken.valid_time = now + 3600000 //1小时有效
 		}
 	}
+	return authToken.token, nil
+}
 
+func GetTokenByRequest(appId, appKey, appSecret string) (string, error) {
+	now := time.Now().UnixNano() / 1e6
 	md5Ctx := md5.New()
-	md5Ctx.Write([]byte(vc.AppId + vc.AppKey + strconv.FormatInt(now, 10) + vc.AppSecret))
+	md5Ctx.Write([]byte(appId + appKey + strconv.FormatInt(now, 10) + appSecret))
 	sign := hex.EncodeToString(md5Ctx.Sum(nil))
 
 	formData, err := json.Marshal(&VivoTokenPar{
-		AppId:     vc.AppId,
-		AppKey:    vc.AppKey,
+		AppId:     appId,
+		AppKey:    appKey,
 		Timestamp: now,
 		Sign:      sign,
 	})
@@ -112,20 +124,6 @@ func (vc *VivoClient) GetToken() (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	// 设置token 缓存
-	if tokenCache != nil{
-		if err := tokenCache.Set(&TokenInfo{
-			Token: token,
-			TokenValidTime: now + 3600000,
-			KeyExpire: 3600000,
-		}); err != nil{
-			return "", err
-		}
-	}
-
-	authToken.token = token
-	authToken.valid_time = now + 3600000 //1小时有效
 	return token, nil
 }
 
