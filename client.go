@@ -53,14 +53,14 @@ func NewClient(appId, appKey, appSecret string) (*VivoPush, error) {
 }
 
 //----------------------------------------Token----------------------------------------//
-//获取token  返回的expiretime 秒  当过期的时候
+//获取token
 func (vc *VivoClient) GetToken() (string, error) {
 	now := time.Now().UnixNano() / 1e6
-	if authToken != nil {
-		if authToken.valid_time > now {
-			return authToken.token, nil
-		}
-	}
+	//if authToken != nil {
+	//	if authToken.valid_time > now {
+	//		return authToken.token, nil
+	//	}
+	//}
 	// 从缓存中获取
 	if tokenCache != nil{
 		ti, err := tokenCache.TokenCache(vc.AppId, vc.AppKey, vc.AppSecret)
