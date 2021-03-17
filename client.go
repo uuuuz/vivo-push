@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -167,14 +168,14 @@ func (v *VivoPush) SendList(msg *MessagePayload, regIds []string) (*SendResult, 
 		return nil, err
 	}
 	if res.Result != 0 {
-		return nil, errors.New(res.Desc)
+		return nil, errors.New(fmt.Sprintf("save list payload fail; res=%v", res))
 	}
-	bytes, err := json.Marshal(NewListMessage(regIds, res.RequestId))
+	bs, err := json.Marshal(NewListMessage(regIds, res.RequestId))
 	if err != nil {
 		return nil, err
 	}
 	//推送
-	res2, err := v.doPost(v.host+PushToListURL, bytes)
+	res2, err := v.doPost(v.host+PushToListURL, bs)
 	if err != nil {
 		return nil, err
 	}
