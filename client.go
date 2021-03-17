@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -141,7 +142,7 @@ func (v *VivoPush) Send(msg *Message, regID string) (*SendResult, error) {
 		return nil, err
 	}
 	if result.Result != 0 {
-		return nil, errors.New(result.Desc)
+		return nil, errors.New(fmt.Sprintf("send err:%s;", string(res)))
 	}
 	return &result, nil
 }
@@ -158,7 +159,7 @@ func (v *VivoPush) SaveListPayload(msg *MessagePayload) (*SendResult, error) {
 		return nil, err
 	}
 	if result.Result != 0 {
-		return nil, errors.New(result.Desc)
+		return nil, errors.New(fmt.Sprintf("send err:%s;", string(res)))
 	}
 	return &result, nil
 }
@@ -190,7 +191,7 @@ func (v *VivoPush) SendList(msg *MessagePayload, regIds []string) (*SendResult, 
 		return nil, err
 	}
 	if result.Result != 0 {
-		return nil, errors.New(result.Desc)
+		return nil, errors.New(fmt.Sprintf("send err:%s;", string(res2)))
 	}
 	return &result, nil
 }
@@ -207,7 +208,7 @@ func (v *VivoPush) SendAll(msg *MessagePayload) (*SendResult, error) {
 		return nil, err
 	}
 	if result.Result != 0 {
-		return nil, errors.New(result.Desc)
+		return nil, errors.New(fmt.Sprintf("send err:%s;", string(res2)))
 	}
 	return &result, nil
 }
