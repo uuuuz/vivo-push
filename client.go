@@ -19,9 +19,10 @@ import (
 var authToken *AuthToken = new(AuthToken)
 
 type VivoClient struct {
-	AppId     string
-	AppKey    string
-	AppSecret string
+	AppId      string
+	AppKey     string
+	AppSecret  string
+	tokenCache TokenCache
 }
 
 type VivoTokenPar struct {
@@ -39,17 +40,19 @@ type AuthToken struct {
 type VivoPush struct {
 	host       string
 	vc         *VivoClient
+	tokenCache TokenCache
 }
 
-func NewClient(appId, appKey, appSecret string) (*VivoPush, error) {
+func NewClient(appId, appKey, appSecret string, tokenCache TokenCache) (*VivoPush, error) {
 	vc := &VivoClient{
 		appId,
 		appKey,
 		appSecret,
+		tokenCache,
 	}
 	return &VivoPush{
-		host:       ProductionHost,
-		vc: 		vc,
+		host: ProductionHost,
+		vc:   vc,
 	}, nil
 }
 
@@ -63,21 +66,21 @@ func (vc *VivoClient) GetToken() (string, error) {
 		}
 	}
 	// 从缓存中获取
-	if tokenCache != nil{
-		ti, err := tokenCache.TokenCache(vc.AppId, vc.AppKey, vc.AppSecret)
-		if err != nil{
+	if vc.tokenCache != nil {
+		ti, err := vc.tokenCache.TokenCache(vc.AppId, vc.AppKey, vc.AppSecret)
+		if err != nil {
 			return "", err
 		}
-		if ti != nil{
+		if ti != nil {
 			authToken.token = ti.Token
 			authToken.valid_time = ti.TokenValidTime
 		}
 	} else {
 		token, err := GetTokenByRequest(vc.AppId, vc.AppKey, vc.AppSecret)
-		if err != nil{
+		if err != nil {
 			return "", err
 		}
-		if token != ""{
+		if token != "" {
 			authToken.token = token
 			authToken.valid_time = now + 3600000 //1小时有效
 		}
@@ -101,7 +104,7 @@ func GetTokenByRequest(appId, appKey, appSecret string) (string, error) {
 		return "", err
 	}
 	req, err := http.NewRequest("POST", ProductionHost+AuthURL, bytes.NewReader(formData))
-	if err != nil{
+	if err != nil {
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/json")
